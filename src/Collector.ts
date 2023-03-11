@@ -31,7 +31,18 @@ export interface CollectorOptions<T> {
 
 const { Events } = Constants;
 
-export class Collector<T> extends EventEmitter {
+export interface BaseCollectorEvents<T, E extends string = string> {
+  end: [collected: Cache<T>, reason: "idle" | "limit" | "timeout" | E]
+}
+export declare interface Collector<T, E extends Record<string | symbol, any>> {
+  on<T extends keyof E>(event: T, listener: (...args: E[T]) => any): this;
+  on(event: keyof E, listener: (...args: any[]) => any): this;
+  once<T extends keyof E>(event: T, listener: (...args: E[T]) => any): this;
+  once(event: keyof E, listener: (...args: any[]) => any): this;
+  emit<T extends keyof E>(event: T, ...args: E[T]): boolean;
+  emit(event: keyof E, ...args: any[]): boolean;
+}
+export class Collector<T, E extends Record<string | symbol, any>> extends EventEmitter {
   collected = new Cache<T>();
   options: Required<CollectorOptions<T>>;
   ended = false;
@@ -77,7 +88,7 @@ export class Collector<T> extends EventEmitter {
 
     if (collected) {
       this.collected.set(collected[0], collected[1]);
-      this.emit("collect", collected);
+      this.emit("collect", collected[1]);
 
       if (this.idleTimeout) {
         clearTimeout(this.idleTimeout);
@@ -118,6 +129,10 @@ export class Collector<T> extends EventEmitter {
     this.endReason = reason;
 
     this.emit("end", this.collected, reason);
+
+    // Remove all listeners excluding end
+    this.removeAllListeners("collect");
+    this.removeAllListeners("dispose");
   }
 }
 
@@ -126,7 +141,12 @@ export interface MessageCollectorOptions extends CollectorOptions<Message> {
   guildId?: string;
 }
 
-export class MessageCollector extends Collector<Message> {
+export interface MessageCollectorEvents extends BaseCollectorEvents<Message, "channelDelete" | "guildDelete"> {
+  collect: [collected: Message];
+  dispose: [disposed: Message];
+}
+
+export class MessageCollector extends Collector<Message, MessageCollectorEvents> {
   private _channelId?: string;
   private _guildId?: string;
 
@@ -206,9 +226,14 @@ export interface InteractionCollectorOptions<
   guildId?: string;
 }
 
+export interface InteractionCollectorEvents<I extends InteractionByType[keyof InteractionByType]> extends BaseCollectorEvents<I, "channelDelete" | "guildDelete"> {
+  collect: [collected: I];
+  dispose: [disposed: I];
+}
+
 export class InteractionCollector<
   I extends InteractionToCollect = InteractionToCollect,
-> extends Collector<InteractionByType[I]> {
+> extends Collector<InteractionByType[I], InteractionCollectorEvents<InteractionByType[I]>> {
   interactionType: API.InteractionType | -1;
   private _channelId?: string;
   componentType?: API.ComponentType;
@@ -308,7 +333,12 @@ export interface ReactionCollectorOptions
   guildId?: string;
 }
 
-export class ReactionCollector extends Collector<CollectedReaction> {
+export interface ReactionCollectorEvents extends BaseCollectorEvents<CollectedReaction, "channelDelete" | "guildDelete" | "messageDelete"> {
+  collect: [collected: CollectedReaction];
+  dispose: [disposed: CollectedReaction];
+}
+
+export class ReactionCollector extends Collector<CollectedReaction, ReactionCollectorEvents> {
   private _channelId?: string;
   private _guildId?: string;
   private _messageId?: string;
