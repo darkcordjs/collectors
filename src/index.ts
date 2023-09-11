@@ -18,16 +18,16 @@ import {
 declare module "darkcord" {
   export interface TextBasedChannel {
     createMessageCollector(
-      options: CollectorOptions<Message>,
+      options?: CollectorOptions<Message>,
     ): MessageCollector;
     createComponentInteractionCollector(
-      options: Omit<
+      options?: Omit<
         InteractionCollectorOptions<API.InteractionType.MessageComponent>,
         "interactionType"
       >,
     ): InteractionCollector<API.InteractionType.MessageComponent>;
     createModalSubmitCollector(
-      options: Omit<
+      options?: Omit<
         InteractionCollectorOptions<API.InteractionType.ModalSubmit>,
         "interactionType"
       >,
@@ -36,7 +36,7 @@ declare module "darkcord" {
 
   export interface Message {
     createReactionCollector(
-      options: CollectorOptions<CollectedReaction>,
+      options?: CollectorOptions<CollectedReaction>,
     ): ReactionCollector;
   }
 }
@@ -56,7 +56,7 @@ export function CollectorPlugin(manager: PluginManager): PluginObject {
         ],
         (X: typeof TextBasedChannel) =>
           class TextBasedChannel extends X {
-            createMessageCollector(options: CollectorOptions<Message>) {
+            createMessageCollector(options: CollectorOptions<Message> = {}) {
               return new MessageCollector(this._client as Client, {
                 channelId: this.id,
                 guildId: this.isGuildChannel() ? this.guildId : undefined,
@@ -68,7 +68,7 @@ export function CollectorPlugin(manager: PluginManager): PluginObject {
               options: Omit<
                 InteractionCollectorOptions<API.InteractionType.MessageComponent>,
                 "interactionType"
-              >,
+              > = {},
             ) {
               return new InteractionCollector(this._client as Client, {
                 channelId: this.id,
@@ -82,7 +82,7 @@ export function CollectorPlugin(manager: PluginManager): PluginObject {
               options: Omit<
                 InteractionCollectorOptions<API.InteractionType.ModalSubmit>,
                 "interactionType"
-              >,
+              > = {},
             ) {
               return new InteractionCollector(this._client as Client, {
                 channelId: this.id,
@@ -99,7 +99,7 @@ export function CollectorPlugin(manager: PluginManager): PluginObject {
         (X: typeof Message) =>
           class Message extends X {
             createReactionCollector(
-              options: CollectorOptions<CollectedReaction>,
+              options: CollectorOptions<CollectedReaction> = {},
             ) {
               return new ReactionCollector(this._client as Client, {
                 guildId: this.guildId,
