@@ -268,15 +268,19 @@ export class InteractionCollector<
       switch (this.interactionType) {
         case API.InteractionType.ApplicationCommand: {
           if (!interaction.isCommand()) return;
+          break;
         }
         case API.InteractionType.ApplicationCommandAutocomplete: {
           if (!interaction.isAutoComplete()) return;
+          break;
         }
         case API.InteractionType.MessageComponent: {
           if (!interaction.isComponent()) return;
+          break;
         }
         case API.InteractionType.ModalSubmit: {
           if (!interaction.isModalSubmit()) return;
+          break;
         }
         default: {
           return;
