@@ -64,12 +64,12 @@ export class Collector<T, E extends Record<string | symbol, any>> extends EventE
 
     this.timeout = null;
     if (options.timeout) {
-      this.timeout = setTimeout(() => this.stop("timeout")).unref();
+      this.timeout = setTimeout(() => this.stop("timeout"), options.timeout).unref();
     }
 
     this.idleTimeout = null;
     if (options.idleTimeout) {
-      this.idleTimeout = setTimeout(this._handleIdle).unref();
+      this.idleTimeout = setTimeout(this._handleIdle, options.idleTimeout).unref();
     }
 
     this.options = options as Required<CollectorOptions<T>>;
