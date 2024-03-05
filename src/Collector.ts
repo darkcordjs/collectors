@@ -95,7 +95,7 @@ export class Collector<T, E extends Record<string | symbol, any>> extends EventE
         this.idleTimeout = setTimeout(this._handleIdle).unref();
       }
 
-      if (this.collected.size > this.options.max) {
+      if (this.collected.size >= this.options.max) {
         this.stop("limit");
       }
     }
